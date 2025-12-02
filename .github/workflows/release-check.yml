@@ -1,0 +1,62 @@
+name: Check Electrs Releases
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  check_releases:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+
+      - name: Get official releases and current releases
+        id: versions
+        run: |
+          OFFICIAL_VERSION=$(curl -s https://api.github.com/repos/romanz/electrs/releases/latest \
+            | jq -r '.tag_name' \
+            | sed 's/^v//')
+
+          CURRENT_VERSION=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases \
+            | jq -r '.[0].tag_name' \
+            | sed 's/^v//')
+
+          if [ -z "$OFFICIAL_VERSION" ]; then
+            echo "Can't fetch release!"
+            exit 1
+          fi
+          
+          VERSION_TO_BUILD=""
+          if [[ "$OFFICIAL_VERSION" != "$CURRENT_VERSION" ]]; then
+            VERSION_TO_BUILD="$OFFICIAL_VERSION"
+          else
+            echo "No new version to build."
+            exit 0
+          fi
+
+          echo "VERSION_TO_BUILD=$VERSION_TO_BUILD" >> $GITHUB_OUTPUT
+
+      - name: Trigger build for new version
+        if: steps.versions.outputs.VERSION_TO_BUILD != ''
+        run: |
+          VERSION="${{ steps.versions.outputs.VERSION_TO_BUILD }}"
+          LATEST_FLAG=true
+
+          echo "Triggering build for version $VERSION (LATEST=$LATEST_FLAG)"
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GHCR_PAT }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-docker.yml/dispatches \
+            -d "{\"ref\":\"main\",\"inputs\":{\"VERSION\":\"v$VERSION\",\"LATEST\":\"$LATEST_FLAG\"}}"
