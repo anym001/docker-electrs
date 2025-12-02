@@ -20,7 +20,9 @@ ENV APP_USER=electrs \
     APP_USER_HOME=/home/electrs \
     DATA_DIR=/data \
     DATA_PERM=2770 \
-    UMASK=002
+    UMASK=002 \
+    PUID=99 \
+    PGID=100
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates gosu bash tini \
