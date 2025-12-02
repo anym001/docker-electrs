@@ -30,9 +30,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -d ${APP_USER_HOME} -s /usr/sbin/nologin ${APP_USER} \
-    && mkdir -p ${DATA_DIR} \
-    && chown -R ${APP_USER}:${APP_USER} ${DATA_DIR} \
-    && chmod ${DATA_PERM} ${DATA_DIR}
+    && mkdir -p ${DATA_DIR}
 
 COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chown root:root /usr/local/bin/electrs \
