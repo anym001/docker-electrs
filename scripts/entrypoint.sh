@@ -45,8 +45,8 @@ if [ "$CURRENT_UID" != "$TARGET_UID" ] || \
     chown -R "$TARGET_UID:$TARGET_GID" "$FINAL_DATADIR"
 fi
 
-# Apply directory permissions
-chmod -R "$DATA_PERM" "$FINAL_DATADIR"
+# Apply permissions (only for directories)
+find "$FINAL_DATADIR" -type d -exec chmod "$DATA_PERM" {} \;
 
 # If no command was specified → default = electrs
 if [[ $# -eq 0 ]]; then
