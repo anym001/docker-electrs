@@ -8,8 +8,10 @@ echo "-----------------------------------------------"
 # Apply umask
 umask "${UMASK:-022}"
 
-# Ensure APP_USER_HOME is set
+# Defaults
 APP_USER_HOME="${APP_USER_HOME:-/home/$APP_USER}"
+DATA_DIR="${DATA_DIR:-/data}"
+FINAL_DATADIR="$DATA_DIR"
 
 # Resolve target uid/gid
 TARGET_UID="${PUID:-$(id -u "$APP_USER")}"
@@ -27,18 +29,24 @@ if [ "$(id -u "$APP_USER")" != "$TARGET_UID" ]; then
     usermod -o -u "$TARGET_UID" "$APP_USER"
 fi
 
+# Fix home ownership
+chown -R "$TARGET_UID:$TARGET_GID" "$APP_USER_HOME"
+
 # Ensure datadir exists
-mkdir -p "$DATA_DIR/db"
+mkdir -p "$FINAL_DATADIR/db"
 
 # Fix ownership if empty or ownership mismatch
 CURRENT_UID=$(stat -c %u "$FINAL_DATADIR")
 CURRENT_GID=$(stat -c %g "$FINAL_DATADIR")
 
-if [ -z "$(ls -A "$DATA_DIR")" ]; then
+if [ "$CURRENT_UID" != "$TARGET_UID" ] || \
+   [ "$CURRENT_GID" != "$TARGET_GID" ]; then
     echo "Fixing ownership and permissions of DATA_DIR..."
-    chown -R "$TARGET_UID:$TARGET_GID" "$DATA_DIR"
-    chmod -R "$DATA_PERM" "$DATA_DIR"
+    chown -R "$TARGET_UID:$TARGET_GID" "$FINAL_DATADIR"
 fi
+
+# Apply directory permissions
+chmod -R "$DATA_PERM" "$FINAL_DATADIR"
 
 # If no command was specified → default = electrs
 if [[ $# -eq 0 ]]; then
@@ -52,7 +60,7 @@ fi
 
 echo "-----------------------------------------------"
 echo "Starting electrs as UID:$TARGET_UID GID:$TARGET_GID"
-echo "Using DATA_DIR: $DATA_DIR"
+echo "Using DATA_DIR: $FINAL_DATADIR"
 echo "Command: $*"
 echo "-----------------------------------------------"
 exec gosu "$TARGET_UID:$TARGET_GID" "$@"
