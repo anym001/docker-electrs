@@ -19,7 +19,7 @@ FROM debian:stable-slim
 ENV APP_USER=electrs \
     APP_USER_HOME=/home/electrs \
     DATA_DIR=/data \
-    DATA_PERM=2770 \
+    DATA_PERM=2750 \
     UMASK=002 \
     PUID=99 \
     PGID=100
