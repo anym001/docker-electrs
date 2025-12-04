@@ -4,7 +4,15 @@ FROM rust:slim AS builder
 ARG ELECTRS_VERSION
 
 RUN apt-get update \
-    && apt-get install -y clang cmake build-essential pkg-config libssl-dev git \
+    && apt-get install -y \
+        clang \
+        libclang-dev \
+        llvm-dev \
+        cmake \
+        build-essential \
+        pkg-config \
+        libssl-dev \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
