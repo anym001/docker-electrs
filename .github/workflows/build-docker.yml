@@ -58,18 +58,7 @@ jobs:
             ELECTRS_VERSION=${{ steps.meta.outputs.SHORT_VERSION }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.SHORT_VERSION }}
-
-      - name: Build & push Docker image (latest)
-        if: ${{ steps.meta.outputs.LATEST == 'true' }}
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          build-args: |
-            ELECTRS_VERSION=${{ steps.meta.outputs.SHORT_VERSION }}
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
+            ${{ steps.meta.outputs.LATEST == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
