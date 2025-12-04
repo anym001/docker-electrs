@@ -55,7 +55,7 @@ jobs:
           file: ./Dockerfile
           push: true
           build-args: |
-            ELECTRS_VERSION=${{ steps.meta.outputs.SHORT_VERSION }}
+            ELECTRS_VERSION=${{ steps.meta.outputs.VERSION }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.SHORT_VERSION }}
             ${{ steps.meta.outputs.LATEST == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
