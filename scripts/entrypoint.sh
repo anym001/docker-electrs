@@ -12,6 +12,7 @@ umask "${UMASK:-022}"
 APP_USER_HOME="${APP_USER_HOME:-/home/$APP_USER}"
 DATA_DIR="${DATA_DIR:-/data}"
 FINAL_DATADIR="$DATA_DIR"
+CONF_FILE="${FINAL_DATADIR}/electrs.toml"
 
 # Resolve target uid/gid
 TARGET_UID="${PUID:-$(id -u "$APP_USER")}"
@@ -48,9 +49,35 @@ fi
 # Apply permissions (only for directories)
 find "$FINAL_DATADIR" -type d -exec chmod "$DATA_PERM" {} \;
 
+# Config handling
+if [ -f "$CONF_FILE" ]; then
+    echo "Using existing electrs.toml at $CONF_FILE"
+else
+    echo "No config found, generating electrs.toml..."
+
+    # BITCOIND default values
+    BITCOIND_HOST="${BITCOIND_HOST:-bitcoind}"
+    BITCOIND_PORT="${BITCOIND_PORT:-8332}"
+
+    cat > "$CONF_FILE" <<EOF
+network = "bitcoin"
+daemon_rpc_addr = "${BITCOIND_HOST}:${BITCOIND_PORT}"
+daemon_rpc_user = "${BTC_RPC_USER:-}"
+daemon_rpc_pass = "${BTC_RPC_PASS:-}"
+db_path = "${FINAL_DATADIR}/db"
+electrum_rpc_addr = "0.0.0.0:50001"
+EOF
+
+    chown "$TARGET_UID:$TARGET_GID" "$CONF_FILE"
+    chmod 0640 "$CONF_FILE"
+
+    echo "Generated electrs.toml:"
+    cat "$CONF_FILE"
+fi
+
 # If no command was specified → default = electrs
 if [[ $# -eq 0 ]]; then
-    set -- electrs
+    set -- electrs --conf "$CONF_FILE"
 fi
 
 # If first arg is a flag, prepend only "electrs"
@@ -61,6 +88,7 @@ fi
 echo "-----------------------------------------------"
 echo "Starting electrs as UID:$TARGET_UID GID:$TARGET_GID"
 echo "Using DATA_DIR: $FINAL_DATADIR"
+echo "Config file: $CONF_FILE"
 echo "Command: $*"
 echo "-----------------------------------------------"
 exec gosu "$TARGET_UID:$TARGET_GID" "$@"
