@@ -48,4 +48,6 @@ COPY scripts/ /opt/scripts/
 RUN chown -R root:root /opt/scripts \
     && chmod -R 0755 /opt/scripts/
 
+EXPOSE 50001
+
 ENTRYPOINT ["/usr/bin/tini", "--", "/opt/scripts/entrypoint.sh"]
