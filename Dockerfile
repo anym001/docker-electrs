@@ -1,5 +1,5 @@
 # Build Stage
-FROM rust:1.76-slim AS builder
+FROM rust:slim AS builder
 
 ARG ELECTRS_VERSION
 
