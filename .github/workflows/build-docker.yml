@@ -48,7 +48,7 @@ jobs:
           echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
           echo "SHORT_VERSION=$SHORT_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build & push Docker images (version tags)
+      - name: Build & push Docker images
         uses: docker/build-push-action@v5
         with:
           context: .
