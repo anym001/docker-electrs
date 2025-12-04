@@ -50,7 +50,7 @@ find "$FINAL_DATADIR" -type d -exec chmod "$DATA_PERM" {} \;
 
 # If no command was specified → default = electrs
 if [[ $# -eq 0 ]]; then
-    set -- electrs --conf /etc/electrs/electrs.toml
+    set -- electrs
 fi
 
 # If first arg is a flag, prepend only "electrs"
