@@ -36,8 +36,6 @@ COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chown root:root /usr/local/bin/electrs \
     && chmod 0755 /usr/local/bin/electrs
 
-COPY electrs.toml /etc/electrs/electrs.toml
-
 COPY scripts/ /opt/scripts/
 RUN chown -R root:root /opt/scripts \
     && chmod -R 0755 /opt/scripts/
