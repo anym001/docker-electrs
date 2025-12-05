@@ -6,7 +6,7 @@ FROM rust:slim AS builder
 ARG ELECTRS_VERSION
 
 RUN apt-get update \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
         clang \
         libclang-dev \
         llvm-dev \
@@ -20,6 +20,7 @@ RUN apt-get update \
 WORKDIR /src
 
 RUN git clone https://github.com/romanz/electrs.git . \
+    && git fetch --tags --prune \
     && git checkout "${ELECTRS_VERSION}"
 
 RUN cargo build --release
