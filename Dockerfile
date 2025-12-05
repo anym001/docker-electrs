@@ -32,7 +32,7 @@ FROM debian:stable-slim
 ENV APP_USER=electrs \
     APP_USER_HOME=/home/electrs \
     DATA_DIR=/data \
-    DATA_PERM=2750 \
+    DATA_PERM=2770 \
     UMASK=002 \
     PUID=99 \
     PGID=100
@@ -48,10 +48,8 @@ RUN apt-get update \
 RUN useradd -m -d ${APP_USER_HOME} -s /usr/sbin/nologin ${APP_USER} \
     && mkdir -p ${DATA_DIR}
 
-RUN mkdir -p /usr/local/libexec
-COPY --from=builder /src/target/release/electrs /usr/local/libexec/electrs
-RUN chown root:root /usr/local/libexec/electrs \
-    && chmod 0755 /usr/local/libexec/electrs
+COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
+RUN chmod 0755 /usr/local/bin/electrs
 
 COPY scripts/ /opt/scripts/
 RUN chown -R root:root /opt/scripts \
