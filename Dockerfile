@@ -42,7 +42,6 @@ RUN apt-get update \
         ca-certificates \
         gosu \
         bash \
-        tini \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -60,4 +59,3 @@ RUN chown -R root:root /opt/scripts \
 EXPOSE 50001
 
 ENTRYPOINT ["/opt/scripts/entrypoint.sh"]
-CMD []
