@@ -1,73 +1,50 @@
 #!/usr/bin/env bash
-#set -euo pipefail
-
-# Debug
-set +e
-set -u
-set -x
-set -o pipefail
-
-echo "-----------------------------------------------"
-echo "DEBUG: Starting entrypoint.sh"
-echo "-----------------------------------------------"
+set -euo pipefail
 
 echo "-----------------------------------------------"
 echo "Initializing electrs container environment..."
-echo "-----------------------------------------------"
 
 # Apply umask early
 umask "${UMASK:-022}"
 
 # Defaults
-APP_USER_HOME="${APP_USER_HOME:-/home/$APP_USER}"
+APP_USER="${APP_USER:-electrs}"
+APP_USER_HOME="${APP_USER_HOME:-/home/${APP_USER}}"
 DATA_DIR="${DATA_DIR:-/data}"
 DB_DIR="${DATA_DIR}/db"
 CONF_FILE="${DATA_DIR}/electrs.toml"
 
 # Resolve target uid/gid
-TARGET_UID="${PUID:-$(id -u "$APP_USER")}"
-TARGET_GID="${PGID:-$(id -g "$APP_USER")}"
+TARGET_UID="${APP_UID:-$(id -u ${APP_USER})}"
+TARGET_GID="${APP_GID:-$(id -g ${APP_USER})}"
 
-# Update group if needed
-if [ "$(id -g "$APP_USER")" != "$TARGET_GID" ]; then
-    echo "Updating GID -> $TARGET_GID"
-    groupmod -o -g "$TARGET_GID" "$APP_USER"
-fi
-
-# Update user if needed
-if [ "$(id -u "$APP_USER")" != "$TARGET_UID" ]; then
-    echo "Updating UID -> $TARGET_UID"
-    usermod -o -u "$TARGET_UID" "$APP_USER"
-fi
+echo "-----------------------------------------------"
+echo "APP_USER=${APP_USER} UID=${TARGET_UID} GID=${TARGET_GID}"
+echo "DATA_DIR=${DATA_DIR} CONF_FILE=${CONF_FILE}"
 
 # Fix home ownership
 chown -R "$TARGET_UID:$TARGET_GID" "$APP_USER_HOME"
 
-# Ensure datadir exists
-mkdir -p "$DB_DIR"
+# Ensure data dir exists and is owned by the image user (ownership already set in Dockerfile)
+mkdir -p "${DB_DIR}/bitcoin"
+chown -R "${TARGET_UID}:${TARGET_GID}" "${DB_DIR}"
 
-# Fix ownership if mismatch
-CURRENT_UID=$(stat -c %u "$DATA_DIR")
-CURRENT_GID=$(stat -c %g "$DATA_DIR")
-
-if [ "$CURRENT_UID" != "$TARGET_UID" ] || [ "$CURRENT_GID" != "$TARGET_GID" ]; then
-    echo "Fixing ownership and permissions of DATA_DIR..."
-    chown -R "$TARGET_UID:$TARGET_GID" "$DATA_DIR"
+# quick write-test (fail with clear message if host mount not writable)
+TESTFILE="${DATA_DIR}/.perm_test"
+if ! touch "${TESTFILE}" 2>/dev/null; then
+    echo "ERROR: ${DATA_DIR} is not writable by container. On Unraid: chown -R 99:100 ${DATA_DIR} (or set proper permissions)."
+    echo "Cannot continue."
+    exit 1
 fi
+rm -f "${TESTFILE}" || true
 
-# Apply permissions (directories only)
-find "$DATA_DIR" -type d -exec chmod "$DATA_PERM" {} \;
-
-# Config handling
-if [ -f "$CONF_FILE" ]; then
-    echo "Using existing electrs.toml at $CONF_FILE"
-else
-    echo "No config found, generating electrs.toml..."
-
+# If no config present, generate a minimal electrs.toml (non-destructive)
+if [ ! -f "${CONF_FILE}" ]; then
+    echo "No config found - generating ${CONF_FILE} ..."
     BITCOIND_HOST="${BITCOIND_HOST:-bitcoind}"
     BITCOIND_PORT="${BITCOIND_PORT:-8332}"
 
-    cat > "$CONF_FILE" <<EOF
+    cat > "${CONF_FILE}" <<EOF
 network = "bitcoin"
 daemon_rpc_addr = "${BITCOIND_HOST}:${BITCOIND_PORT}"
 daemon_rpc_user = "${BTC_RPC_USER:-}"
@@ -76,30 +53,26 @@ db_path = "${DB_DIR}"
 electrum_rpc_addr = "0.0.0.0:50001"
 EOF
 
-    chown "$TARGET_UID:$TARGET_GID" "$CONF_FILE"
-    chmod 0640 "$CONF_FILE"
-
-    echo "Generated electrs.toml:"
-    cat "$CONF_FILE"
+    # set sensible perms for config
+    chown ${TARGET_UID}:${TARGET_GID} "${CONF_FILE}" || true
+    chmod 0640 "${CONF_FILE}" || true
+    echo "Generated ${CONF_FILE}:"
+    sed -n '1,200p' "${CONF_FILE}" || true
+else
+    echo "Using existing ${CONF_FILE}"
 fi
 
-# Default command: electrs
-if [[ $# -eq 0 ]]; then
-    set -- electrs --conf "$CONF_FILE"
+# If the first arg is "electrs" (default CMD), replace with full command including --conf.
+if [ "${1:-}" = "electrs" ]; then
+    set -- electrs --conf "${CONF_FILE}"
 fi
 
-# If first argument is a flag, prepend electrs
-if [[ "${1:0:1}" == "-" ]]; then
+# If user passed flags like --help or -v, allow electrs to run with those flags
+if [[ "${1:0:1}" = "-" ]]; then
     set -- electrs "$@"
 fi
-
 echo "-----------------------------------------------"
-echo "Starting electrs as UID:$TARGET_UID GID:$TARGET_GID"
-echo "Using DATA_DIR: $DATA_DIR"
-echo "Config file: $CONF_FILE"
-echo "Command: $*"
+echo "Starting command as user ${APP_USER}: $*"
 echo "-----------------------------------------------"
-
-cd "$DATA_DIR"
-
-exec gosu "$TARGET_UID:$TARGET_GID" "$@"
+cd "${DATA_DIR}"
+exec gosu "${TARGET_UID}:${TARGET_GID}" "$@"
