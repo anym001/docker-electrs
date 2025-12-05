@@ -51,3 +51,4 @@ RUN chown -R root:root /opt/scripts \
 EXPOSE 50001
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/opt/scripts/entrypoint.sh"]
+CMD []
