@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# wrap everything inside tini immediately
-if [ -z "${TINI_WRAPPED-}" ]; then
-    export TINI_WRAPPED=1
-    exec /usr/bin/tini -s -- "$0" "$@"
-fi
-
 echo "-----------------------------------------------"
 echo "Initializing electrs container environment..."
 echo "-----------------------------------------------"
