@@ -1,4 +1,6 @@
-# Build Stage
+# ----------------------------------------------------
+# Build stage
+# ----------------------------------------------------
 FROM rust:slim AS builder
 
 ARG ELECTRS_VERSION
@@ -16,12 +18,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
+
 RUN git clone https://github.com/romanz/electrs.git . \
     && git checkout "${ELECTRS_VERSION}"
 
 RUN cargo build --release
 
-# Runtime Image
+# ----------------------------------------------------
+# Runtime stage
+# ----------------------------------------------------
 FROM debian:stable-slim
 
 ENV APP_USER=electrs \
@@ -33,7 +38,11 @@ ENV APP_USER=electrs \
     PGID=100
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates gosu bash tini \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gosu \
+        bash \
+        tini \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
