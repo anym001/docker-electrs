@@ -11,8 +11,8 @@ umask "${UMASK:-022}"
 # Defaults
 APP_USER_HOME="${APP_USER_HOME:-/home/$APP_USER}"
 DATA_DIR="${DATA_DIR:-/data}"
-FINAL_DATADIR="$DATA_DIR"
-CONF_FILE="${FINAL_DATADIR}/electrs.toml"
+DB_DIR="${DATA_DIR}/db"
+CONF_FILE="${DATA_DIR}/electrs.toml"
 
 # Resolve target uid/gid
 TARGET_UID="${PUID:-$(id -u "$APP_USER")}"
@@ -34,20 +34,20 @@ fi
 chown -R "$TARGET_UID:$TARGET_GID" "$APP_USER_HOME"
 
 # Ensure datadir exists
-mkdir -p "$FINAL_DATADIR/db"
+mkdir -p "$DB_DIR"
 
 # Fix ownership if empty or ownership mismatch
-CURRENT_UID=$(stat -c %u "$FINAL_DATADIR")
-CURRENT_GID=$(stat -c %g "$FINAL_DATADIR")
+CURRENT_UID=$(stat -c %u "$DATA_DIR")
+CURRENT_GID=$(stat -c %g "$DATA_DIR")
 
 if [ "$CURRENT_UID" != "$TARGET_UID" ] || \
    [ "$CURRENT_GID" != "$TARGET_GID" ]; then
     echo "Fixing ownership and permissions of DATA_DIR..."
-    chown -R "$TARGET_UID:$TARGET_GID" "$FINAL_DATADIR"
+    chown -R "$TARGET_UID:$TARGET_GID" "$DATA_DIR"
 fi
 
 # Apply permissions (only for directories)
-find "$FINAL_DATADIR" -type d -exec chmod "$DATA_PERM" {} \;
+find "$DATA_DIR" -type d -exec chmod "$DATA_PERM" {} \;
 
 # Config handling
 if [ -f "$CONF_FILE" ]; then
@@ -64,7 +64,7 @@ network = "bitcoin"
 daemon_rpc_addr = "${BITCOIND_HOST}:${BITCOIND_PORT}"
 daemon_rpc_user = "${BTC_RPC_USER:-}"
 daemon_rpc_pass = "${BTC_RPC_PASS:-}"
-db_path = "${FINAL_DATADIR}/db"
+db_path = "${DB_DIR}"
 electrum_rpc_addr = "0.0.0.0:50001"
 EOF
 
@@ -87,9 +87,9 @@ fi
 
 echo "-----------------------------------------------"
 echo "Starting electrs as UID:$TARGET_UID GID:$TARGET_GID"
-echo "Using DATA_DIR: $FINAL_DATADIR"
+echo "Using DATA_DIR: $DATA_DIR"
 echo "Config file: $CONF_FILE"
 echo "Command: $*"
 echo "-----------------------------------------------"
-cd "$FINAL_DATADIR"
+cd "$DATA_DIR"
 exec gosu "$TARGET_UID:$TARGET_GID" "$@"
