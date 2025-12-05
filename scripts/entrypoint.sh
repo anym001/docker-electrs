@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-set -euo pipefail
+#set -euo pipefail
+
+# Debug
+set +e
+set -u
+set -x
+set -o pipefail
+
+echo "-----------------------------------------------"
+echo "DEBUG: Starting entrypoint.sh"
+echo "-----------------------------------------------"
 
 echo "-----------------------------------------------"
 echo "Initializing electrs container environment..."
