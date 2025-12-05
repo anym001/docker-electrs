@@ -85,12 +85,12 @@ fi
 
 # Default command: electrs
 if [[ $# -eq 0 ]]; then
-    set -- /usr/local/libexec/electrs --conf "$CONF_FILE"
+    set -- electrs --conf "$CONF_FILE"
 fi
 
 # If first argument is a flag, prepend electrs
 if [[ "${1:0:1}" == "-" ]]; then
-    set -- /usr/local/libexec/electrs "$@"
+    set -- electrs "$@"
 fi
 
 echo "-----------------------------------------------"
