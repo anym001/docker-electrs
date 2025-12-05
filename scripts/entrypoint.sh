@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# wrap everything inside tini immediately
+if [ -z "${TINI_WRAPPED-}" ]; then
+    export TINI_WRAPPED=1
+    exec /usr/bin/tini -s -- "$0" "$@"
+fi
+
 echo "-----------------------------------------------"
 echo "Initializing electrs container environment..."
 echo "-----------------------------------------------"
 
-# Apply umask
+# Apply umask early
 umask "${UMASK:-022}"
 
 # Defaults
@@ -55,7 +61,6 @@ if [ -f "$CONF_FILE" ]; then
 else
     echo "No config found, generating electrs.toml..."
 
-    # BITCOIND default values
     BITCOIND_HOST="${BITCOIND_HOST:-bitcoind}"
     BITCOIND_PORT="${BITCOIND_PORT:-8332}"
 
@@ -91,5 +96,7 @@ echo "Using DATA_DIR: $DATA_DIR"
 echo "Config file: $CONF_FILE"
 echo "Command: $*"
 echo "-----------------------------------------------"
+
 cd "$DATA_DIR"
+
 exec gosu "$TARGET_UID:$TARGET_GID" "$@"
