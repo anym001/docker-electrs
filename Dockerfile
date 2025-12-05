@@ -49,10 +49,16 @@ RUN apt-get update \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd -g ${APP_GID} ${APP_USER} \
-    && useradd -u ${APP_UID} -g ${APP_GID} -m -d ${APP_USER_HOME} -s /usr/sbin/nologin ${APP_USER} \
-    && mkdir -p ${DATA_DIR} \
-    && chown ${APP_UID}:${APP_GID} ${DATA_DIR}
+RUN if ! getent group "${APP_GID}" >/dev/null; then \
+        groupadd -g "${APP_GID}" "${APP_USER}"; \
+    else \
+        GROUP_NAME=$(getent group "${APP_GID}" | cut -d: -f1); \
+        echo "GID ${APP_GID} already exists, using group ${GROUP_NAME}"; \
+        APP_USER_GROUP="${GROUP_NAME}"; \
+    fi \
+    && useradd -u "${APP_UID}" -g "${APP_GID}" -m -d "${APP_USER_HOME}" -s /usr/sbin/nologin "${APP_USER}" \
+    && mkdir -p "${DATA_DIR}" \
+    && chown "${APP_UID}:${APP_GID}" "${DATA_DIR}"
 
 COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chmod 0755 /usr/local/bin/electrs \
