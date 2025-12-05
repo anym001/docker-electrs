@@ -69,5 +69,5 @@ RUN chmod -R 0755 /opt/scripts/
 
 EXPOSE 50001
 
-ENTRYPOINT ["/opt/scripts/entrypoint.sh"]
+ENTRYPOINT ["bash", "/opt/scripts/entrypoint.sh"]
 CMD ["electrs"]
