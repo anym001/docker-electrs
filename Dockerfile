@@ -14,6 +14,7 @@ RUN apt-get update \
         build-essential \
         pkg-config \
         libssl-dev \
+        librocksdb-dev \
         git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,25 +35,24 @@ ARG ELECTRS_VERSION
 
 ENV APP_USER=electrs \
     APP_USER_HOME=/home/electrs \
+    APP_UID=99 \
+    APP_GID=100 \
     DATA_DIR=/data \
     DATA_PERM=2770 \
-    UMASK=002 \
-    PUID=99 \
-    PGID=100
+    UMASK=002
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         gosu \
         bash \
-        librocksdb6v1 \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd -g ${PGID} ${APP_USER} \
-    && useradd -u ${PUID} -g ${PGID} -m -d ${APP_USER_HOME} -s /usr/sbin/nologin ${APP_USER} \
+RUN groupadd -g ${APP_GID} ${APP_USER} \
+    && useradd -u ${APP_UID} -g ${APP_GID} -m -d ${APP_USER_HOME} -s /usr/sbin/nologin ${APP_USER} \
     && mkdir -p ${DATA_DIR} \
-    && chown ${PUID}:${PGID} ${DATA_DIR}
+    && chown ${APP_UID}:${APP_GID} ${DATA_DIR}
 
 COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chmod 0755 /usr/local/bin/electrs \
@@ -61,7 +61,6 @@ RUN chmod 0755 /usr/local/bin/electrs \
 COPY scripts/ /opt/scripts/
 RUN chmod -R 0755 /opt/scripts/
 
-VOLUME ["${DATA_DIR}"]
 EXPOSE 50001
 
 ENTRYPOINT ["/opt/scripts/entrypoint.sh"]
