@@ -58,7 +58,7 @@ COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chmod 0755 /usr/local/bin/electrs \
     && chown root:root /usr/local/bin/electrs
 
-COPY scripts/ /opt/scripts/
+COPY scripts/ /opt/scripts
 RUN chmod -R 0755 /opt/scripts/
 
 EXPOSE 50001
