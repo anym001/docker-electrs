@@ -48,9 +48,10 @@ RUN apt-get update \
 RUN useradd -m -d ${APP_USER_HOME} -s /usr/sbin/nologin ${APP_USER} \
     && mkdir -p ${DATA_DIR}
 
-COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
-RUN chown root:root /usr/local/bin/electrs \
-    && chmod 0755 /usr/local/bin/electrs
+RUN mkdir -p /usr/local/libexec
+COPY --from=builder /src/target/release/electrs /usr/local/libexec/electrs
+RUN chown root:root /usr/local/libexec/electrs \
+    && chmod 0755 /usr/local/libexec/electrs
 
 COPY scripts/ /opt/scripts/
 RUN chown -R root:root /opt/scripts \
