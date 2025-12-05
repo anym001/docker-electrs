@@ -20,13 +20,13 @@ TARGET_GID="${PGID:-$(id -g "$APP_USER")}"
 
 # Update group if needed
 if [ "$(id -g "$APP_USER")" != "$TARGET_GID" ]; then
-    echo "Updating GID → $TARGET_GID"
+    echo "Updating GID -> $TARGET_GID"
     groupmod -o -g "$TARGET_GID" "$APP_USER"
 fi
 
 # Update user if needed
 if [ "$(id -u "$APP_USER")" != "$TARGET_UID" ]; then
-    echo "Updating UID → $TARGET_UID"
+    echo "Updating UID -> $TARGET_UID"
     usermod -o -u "$TARGET_UID" "$APP_USER"
 fi
 
@@ -36,17 +36,16 @@ chown -R "$TARGET_UID:$TARGET_GID" "$APP_USER_HOME"
 # Ensure datadir exists
 mkdir -p "$DB_DIR"
 
-# Fix ownership if empty or ownership mismatch
+# Fix ownership if mismatch
 CURRENT_UID=$(stat -c %u "$DATA_DIR")
 CURRENT_GID=$(stat -c %g "$DATA_DIR")
 
-if [ "$CURRENT_UID" != "$TARGET_UID" ] || \
-   [ "$CURRENT_GID" != "$TARGET_GID" ]; then
+if [ "$CURRENT_UID" != "$TARGET_UID" ] || [ "$CURRENT_GID" != "$TARGET_GID" ]; then
     echo "Fixing ownership and permissions of DATA_DIR..."
     chown -R "$TARGET_UID:$TARGET_GID" "$DATA_DIR"
 fi
 
-# Apply permissions (only for directories)
+# Apply permissions (directories only)
 find "$DATA_DIR" -type d -exec chmod "$DATA_PERM" {} \;
 
 # Config handling
@@ -74,13 +73,13 @@ EOF
     cat "$CONF_FILE"
 fi
 
-# If no command was specified → default = electrs
-if [[ $# -eq 0 ]]; then
+# Default command: electrs
+if [ $# -eq 0 ]; then
     set -- electrs --conf "$CONF_FILE"
 fi
 
-# If first arg is a flag, prepend only "electrs"
-if [[ "${1:0:1}" == "-" ]]; then
+# If first argument is a flag, prepend electrs
+if [ "${1#-}" != "$1" ]; then
     set -- electrs "$@"
 fi
 
