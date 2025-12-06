@@ -55,5 +55,7 @@ fi
 
 echo "-----------------------------------------------"
 echo "Starting electrs as UID:$PUID GID:$PGID"
+echo "Using DATA_DIR: /data"
+echo "Command: $*"
 echo "-----------------------------------------------"
 exec gosu "$PUID:$PGID" electrs "$@"
