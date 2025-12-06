@@ -39,7 +39,7 @@ RUN apt-get update \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p ${DATA_DIR} /home/electrs/.bitcoin
+RUN mkdir -p ${DATA_DIR}
 
 COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chmod 0755 /usr/local/bin/electrs
