@@ -31,20 +31,31 @@ RUN cargo build --release
 # ----------------------------------------------------
 FROM debian:stable-slim
 
-ENV DATA_DIR=/data
+ENV DATA_DIR=/data \
+    APP_USER=electrs \
+    APP_UID=99 \
+    APP_GID=100 \
+    APP_HOME=/home/electrs
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates bash \
+        ca-certificates bash gosu \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p ${DATA_DIR}
+RUN if ! getent group "${APP_GID}" >/dev/null; then \
+        groupadd -g "${APP_GID}" "${APP_USER}"; \
+    fi \
+    && useradd -u "${APP_UID}" -g "${APP_GID}" -m -d "${APP_HOME}" -s /usr/sbin/nologin "${APP_USER}"
+
+RUN mkdir -p ${DATA_DIR} \
+    && chown -R ${APP_UID}:${APP_GID} ${DATA_DIR}
 
 COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
 RUN chmod 0755 /usr/local/bin/electrs
 
 EXPOSE 50001
 
-ENTRYPOINT ["electrs"]
+WORKDIR /data
+ENTRYPOINT ["gosu", "99:100", "electrs"]
 CMD ["--conf", "/data/electrs.toml"]
