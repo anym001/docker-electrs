@@ -53,7 +53,7 @@ RUN chmod 0755 /usr/local/bin/electrs
 COPY scripts/ /opt/scripts
 RUN chmod -R 0755 /opt/scripts/
 
-EXPOSE 50001
+EXPOSE 50001 4224
 
 WORKDIR /data
 
