@@ -53,6 +53,7 @@ docker run -d \
   -e PGID=100 \
   -e UMASK=002 \
   -p 50001:50001 \
+  -p 4224:4224 \
   -v /mnt/user/bitcoin/electrs:/data \
   -v /mnt/user/bitcoin/bitcoind:/home/electrs/.bitcoin \
   ghcr.io/anym001/docker-electrs:<version>
