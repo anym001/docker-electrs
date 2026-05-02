@@ -99,10 +99,10 @@ electrum_rpc_addr = "0.0.0.0:50001"
 
 ## 📁 Volume Mounts
 
-| Container Path         | Purpose                                           |
-| :--------------------- | :------------------------------------------------ |
-| /data                  | Container user UID (maps to host UID). Optional.  |
-| /home/electrs/.bitcoin | Container group GID (maps to host GID). Optional. |
+| Container Path         | Purpose                                              |
+| :--------------------- | :--------------------------------------------------- |
+| /data                  | Electrs data directory (index database, config file) |
+| /home/electrs/.bitcoin | Bitcoin Core data directory (cookie auth file)       |
 
 ## 🔌 Ports
 
