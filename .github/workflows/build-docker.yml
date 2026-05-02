@@ -18,7 +18,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-      id-token: write
 
     steps:
       - name: Checkout repository
@@ -56,6 +55,8 @@ jobs:
           push: true
           build-args: |
             ELECTRS_VERSION=${{ steps.meta.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.SHORT_VERSION }}
             ${{ steps.meta.outputs.LATEST == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
