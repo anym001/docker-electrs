@@ -21,25 +21,22 @@ APP_HOME=/home/electrs
 # Apply umask
 umask "$UMASK"
 
-# Check if a group with PGID already exists
+# Ensure a group with PGID exists; create one named $APP_USER if not
 if ! getent group "$PGID" >/dev/null; then
     echo "Creating group $APP_USER with GID $PGID"
     groupadd -g "$PGID" "$APP_USER"
-else
-    GROUP_NAME=$(getent group "$PGID" | cut -d: -f1)
-    APP_USER="$GROUP_NAME"
 fi
 
-# Check if a user with PUID already exists
+# Ensure user $APP_USER exists with the correct UID/GID
 if id -u "$APP_USER" >/dev/null 2>&1; then
-    # User exists: change UID/GID if required
+    # User exists: update UID and primary group if required
     if [ "$(id -u "$APP_USER")" != "$PUID" ]; then
         echo "Updating UID of $APP_USER → $PUID"
         usermod -o -u "$PUID" "$APP_USER"
     fi
     if [ "$(id -g "$APP_USER")" != "$PGID" ]; then
-        echo "Updating GID of $APP_USER → $PGID"
-        groupmod -o -g "$PGID" "$APP_USER"
+        echo "Updating primary group of $APP_USER → $PGID"
+        usermod -g "$PGID" "$APP_USER"
     fi
 else
     echo "Creating user $APP_USER with UID $PUID GID $PGID"
