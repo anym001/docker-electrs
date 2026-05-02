@@ -20,9 +20,8 @@ RUN apt-get update \
 
 WORKDIR /src
 
-RUN git clone https://github.com/romanz/electrs.git . \
-    && git fetch --tags --prune \
-    && git checkout "${ELECTRS_VERSION}"
+RUN git clone --depth 1 --branch "${ELECTRS_VERSION}" \
+    https://github.com/romanz/electrs.git .
 
 RUN cargo build --release
 
@@ -47,8 +46,7 @@ RUN apt-get update \
 
 RUN mkdir -p ${DATA_DIR} ${APP_USER_HOME}
 
-COPY --from=builder /src/target/release/electrs /usr/local/bin/electrs
-RUN chmod 0755 /usr/local/bin/electrs
+COPY --chmod=0755 --from=builder /src/target/release/electrs /usr/local/bin/electrs
 
 COPY scripts/ /opt/scripts
 RUN chmod -R 0755 /opt/scripts/
