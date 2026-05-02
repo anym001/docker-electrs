@@ -10,6 +10,11 @@ PUID=${PUID:-99}
 PGID=${PGID:-100}
 UMASK=${UMASK:-002}
 
+if ! [[ "$PUID" =~ ^[0-9]+$ ]] || ! [[ "$PGID" =~ ^[0-9]+$ ]]; then
+    echo "Error: PUID and PGID must be integers (got PUID='$PUID' PGID='$PGID')" >&2
+    exit 1
+fi
+
 APP_USER=electrs
 APP_HOME=/home/electrs
 
@@ -50,7 +55,7 @@ CURRENT_GID=$(stat -c %g /data || echo 0)
 
 if [ "$CURRENT_UID" != "$PUID" ] || [ "$CURRENT_GID" != "$PGID" ]; then
     echo "Correcting ownership of /data ..."
-    chown -R "$PUID:$PGID" /data || true
+    chown -R "$PUID:$PGID" /data || echo "Warning: chown /data failed (read-only mount?)"
 fi
 
 echo "-----------------------------------------------"
