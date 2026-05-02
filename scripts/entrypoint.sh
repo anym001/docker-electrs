@@ -40,7 +40,7 @@ if id -u "$APP_USER" >/dev/null 2>&1; then
     fi
 else
     echo "Creating user $APP_USER with UID $PUID GID $PGID"
-    useradd -u "$PUID" -g "$PGID" -d "$APP_HOME" -s /usr/sbin/nologin "$APP_USER"
+    useradd -K UID_MIN=1 -K UID_MAX=65535 -u "$PUID" -g "$PGID" -d "$APP_HOME" -s /usr/sbin/nologin "$APP_USER"
 fi
 
 # Ensure folders exist
