@@ -26,6 +26,11 @@ jobs:
             exit 1
           fi
 
+          if ! [[ "$OFFICIAL_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: unexpected version format from upstream: '$OFFICIAL_VERSION'" >&2
+            exit 1
+          fi
+
           CURRENT_VERSION=$(curl -s \
             -H "$AUTH_HEADER" \
             "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
@@ -37,8 +42,11 @@ jobs:
           fi
 
           echo "New version detected: v$OFFICIAL_VERSION (current: ${CURRENT_VERSION:-none})"
+          PAYLOAD=$(jq -n \
+            --arg version "v$OFFICIAL_VERSION" \
+            '{"ref":"main","inputs":{"VERSION":$version,"LATEST":"true"}}')
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: token ${{ secrets.GHCR_PAT }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-docker.yml/dispatches" \
-            -d "{\"ref\":\"main\",\"inputs\":{\"VERSION\":\"v$OFFICIAL_VERSION\",\"LATEST\":\"true\"}}"
+            -d "$PAYLOAD"

@@ -15,6 +15,11 @@ if ! [[ "$PUID" =~ ^[0-9]+$ ]] || ! [[ "$PGID" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+if ! [[ "$UMASK" =~ ^[0-7]{3,4}$ ]]; then
+    echo "Error: UMASK must be a valid octal value (got UMASK='$UMASK')" >&2
+    exit 1
+fi
+
 APP_USER=electrs
 APP_HOME=/home/electrs
 
@@ -32,7 +37,7 @@ if id -u "$APP_USER" >/dev/null 2>&1; then
     # User exists: update UID and primary group if required
     if [ "$(id -u "$APP_USER")" != "$PUID" ]; then
         echo "Updating UID of $APP_USER → $PUID"
-        usermod -o -u "$PUID" "$APP_USER"
+        usermod -u "$PUID" "$APP_USER"
     fi
     if [ "$(id -g "$APP_USER")" != "$PGID" ]; then
         echo "Updating primary group of $APP_USER → $PGID"
