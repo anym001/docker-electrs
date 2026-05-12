@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Docker Buildx
@@ -37,9 +37,14 @@ jobs:
 
       - name: Prepare tags
         id: meta
+        env:
+          VERSION: ${{ github.event.inputs.VERSION }}
+          LATEST: ${{ github.event.inputs.LATEST }}
         run: |
-          VERSION="${{ github.event.inputs.VERSION }}"
-          LATEST="${{ github.event.inputs.LATEST }}"
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: VERSION must match vX.Y.Z (got '$VERSION')" >&2
+            exit 1
+          fi
           SHORT_VERSION="${VERSION#v}"
 
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
