@@ -7,31 +7,39 @@ The latest tag is set only for the newest official release.
 
 Electrs provides a fast, private, and fully indexed Electrum-compatible API backed by your own Bitcoin Core node.
 
-This image supports:
+## Contents
 
-- 🚀 Fast Electrum server backed by RocksDB
-- 🔑 Cookie authentication with Bitcoin Core
-- 👤 Non-root runtime using PUID/PGID (Unraid compatible)
-- 📁 Simple configuration using electrs.toml in the data directory
-- 🔧 Clean multi-stage build
-- 📊 Optional Prometheus metrics endpoint
+- [Features](#features)
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Environment Variables](#environment-variables)
+- [Volume Mounts](#volume-mounts)
+- [Ports](#ports)
+- [Security](#security)
+- [Automated Build System](#automated-build-system)
+- [Contributing](#contributing)
 
-## 📌 Features
+## Features
 
-- Multi-stage Rust build → small final image
-- Dynamic user permissions via `PUID`, `PGID`, and `UMASK`
+- Fast Electrum server backed by RocksDB
+- Multi-stage Rust build resulting in a small final image
+- Cookie authentication with Bitcoin Core
+- Dynamic user permissions via `PUID`, `PGID`, and `UMASK` (Unraid compatible)
+- Simple configuration using `electrs.toml` in the data directory
+- Optional Prometheus metrics endpoint
 - Works with Bitcoin Core (bitcoind) running in a separate container
 - Supports large full-node index databases
-- Works on Unraid, Docker CLI, Docker Compose, Portainer, etc.
+- Compatible with Unraid, Docker CLI, Docker Compose, and Portainer
 
-## 🧩 Requirements
+## Requirements
 
 - A running Bitcoin Core (bitcoind) container
 - RPC port (8332) and P2P port (8333) must be reachable by Electrs
 - A `.cookie` authentication file must be mounted into `/home/electrs/.bitcoin`
 - A configuration file `/data/electrs.toml` must be provided by the user
 
-## 🚀 Usage
+## Usage
 
 Minimal example:
 
@@ -61,10 +69,10 @@ docker run -d \
 
 Tags:
 
-- `<version>` → e.g., 0.11.0 (always built for each release)
-- `latest` → points to the latest official release
+- `<version>` — e.g., 0.11.0 (always built for each release)
+- `latest` — points to the latest official release
 
-## 📁 Configuration
+## Configuration
 
 You must create a configuration file inside your mounted directory:
 
@@ -89,56 +97,52 @@ db_dir = "/data/db"
 electrum_rpc_addr = "0.0.0.0:50001"
 ```
 
-## 🔧 Environment Variables
+## Environment Variables
 
 | Variable | Description                                                   |
 | :------- | :------------------------------------------------------------ |
-| PUID     | Container user UID (maps to host UID). Optional.              |
-| PGID     | Container group GID (maps to host GID). Optional.             |
-| UMASK    | Default file creation mask inside the container. Default: 002 |
+| `PUID`   | Container user UID (maps to host UID). Optional.              |
+| `PGID`   | Container group GID (maps to host GID). Optional.             |
+| `UMASK`  | Default file creation mask inside the container. Default: 002 |
 
-## 📁 Volume Mounts
+## Volume Mounts
 
-| Container Path         | Purpose                                              |
-| :--------------------- | :--------------------------------------------------- |
-| /data                  | Electrs data directory (index database, config file) |
-| /home/electrs/.bitcoin | Bitcoin Core data directory (cookie auth file)       |
+| Container Path           | Purpose                                              |
+| :----------------------- | :--------------------------------------------------- |
+| `/data`                  | Electrs data directory (index database, config file) |
+| `/home/electrs/.bitcoin` | Bitcoin Core data directory (cookie auth file)       |
 
-## 🔌 Ports
+## Ports
 
-| Port.     | Description                   |
-| :-------- | :---------------------------- |
-| 50001/tcp | Electrum RPC port             |
-| 4224/tcp  | Prometheus metrics (optional) |
+| Port        | Description                   |
+| :---------- | :---------------------------- |
+| `50001/tcp` | Electrum RPC port             |
+| `4224/tcp`  | Prometheus metrics (optional) |
 
-## 🔒 Security
+## Security
 
 This image is designed with safety in mind:
 
-- Runs as non-root user electrs
-- Uses minimal base image (debian:stable-slim)
+- Runs as non-root user `electrs`
+- Uses minimal base image (`debian:stable-slim`)
 - No unnecessary packages installed
-- Ensures safe access to the mounted volume using:
-  - PUID
-  - PGID
-  - UMASK
+- Ensures safe access to the mounted volume using `PUID`, `PGID`, and `UMASK`
 
-## 🏗️ Automated Build System
+## Automated Build System
 
-1. release-check.yml workflow:
-
-   - Checks all official electrs releases
+1. `release-check.yml` workflow:
+   - Checks all official Electrs releases
    - Determines which releases are missing in your repo
-   - Triggers build-docker.yml for missing releases
-   - Passes LATEST=true for the newest release
+   - Triggers `build-docker.yml` for missing releases
+   - Passes `LATEST=true` for the newest release
 
-2. build-docker.yml workflow:
+2. `build-docker.yml` workflow:
    - Downloads official binaries
    - Extracts required binaries
    - Builds and pushes Docker images to GHCR
    - Creates a GitHub Release for each version
 
-## 🤝 Contributing
+## Contributing
 
 PRs are welcome, especially improvements to:
 
