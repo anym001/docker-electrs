@@ -16,12 +16,18 @@ RUN apt-get update \
         libssl-dev \
         librocksdb-dev \
         git \
+        gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
 
 RUN git clone --depth 1 --branch "${ELECTRS_VERSION}" \
     https://github.com/romanz/electrs.git .
+
+# Verify the release tag using Roman Zeyde's GPG key (fingerprint stable since 2018)
+RUN gpg --keyserver hkps://keyserver.ubuntu.com \
+        --recv-keys 15C8C3574AE4F1E25F3F35C587CAE5FA46917CBB \
+    && git verify-tag "${ELECTRS_VERSION}"
 
 RUN cargo build --release
 
