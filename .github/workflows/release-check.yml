@@ -46,7 +46,7 @@ jobs:
           PAYLOAD=$(jq -n \
             --arg version "v$OFFICIAL_VERSION" \
             '{"ref":"main","inputs":{"VERSION":$version,"LATEST":"true"}}')
-          curl -X POST \
+          curl -sS --fail-with-body -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-docker.yml/dispatches" \
