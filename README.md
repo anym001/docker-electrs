@@ -1,5 +1,9 @@
 # Electrs Docker Images
 
+[![Build](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml/badge.svg)](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GHCR](https://img.shields.io/badge/GHCR-docker--electrs-2496ED?logo=docker&logoColor=white)](https://github.com/anym001/docker-electrs/pkgs/container/docker-electrs)
+
 This repository provides automated Docker images for Electrs.
 Images are built for all official releases starting from `v0.11.0` and pushed to GitHub Container Registry (GHCR).
 The workflow automatically detects new releases from `romanz/electrs` and triggers the Docker build.
