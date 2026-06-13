@@ -155,3 +155,14 @@ PRs are welcome, especially improvements to:
 - Enhancing testing or verification
 - Image signing and supply-chain security
 - Documentation
+
+## License
+
+The contents of this repository (Dockerfile, scripts, and workflows) are
+licensed under the [MIT License](LICENSE).
+
+This project only packages electrs into Docker images; the upstream source
+code is compiled at build time, not modified or redistributed in this
+repository. [electrs](https://github.com/romanz/electrs) is distributed under
+its own MIT license, and all upstream copyrights and trademarks remain with
+their respective owners.
