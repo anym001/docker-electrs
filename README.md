@@ -166,3 +166,7 @@ code is compiled at build time, not modified or redistributed in this
 repository. [electrs](https://github.com/romanz/electrs) is distributed under
 its own MIT license, and all upstream copyrights and trademarks remain with
 their respective owners.
+
+---
+
+Built with [Claude Code](https://claude.com/claude-code).
