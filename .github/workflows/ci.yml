@@ -17,12 +17,10 @@ jobs:
   lint:
     # Static gates: ShellCheck on the entrypoint, Hadolint on the Dockerfile,
     # actionlint on the workflows. No image build, so this is fast feedback.
-    # Tools are fetched as pinned release binaries (not Docker Hub images) so
-    # the lint job never trips over anonymous registry pull-rate limits.
+    # Hadolint/actionlint run via SHA-pinned actions (both fetch from ghcr /
+    # release binaries, not Docker Hub) so Dependabot's github-actions group
+    # keeps them up to date in the same weekly PR as the other pinned actions.
     runs-on: ubuntu-latest
-    env:
-      HADOLINT_VERSION: v2.12.0
-      ACTIONLINT_VERSION: 1.7.7
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -31,18 +29,17 @@ jobs:
         run: shellcheck scripts/entrypoint.sh
 
       - name: Hadolint (Dockerfile)
-        # hadolint reads .hadolint.yaml from the repo root automatically.
-        run: |
-          curl -fsSL -o /usr/local/bin/hadolint \
-            "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64"
-          chmod +x /usr/local/bin/hadolint
-          hadolint Dockerfile
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: Dockerfile
+          config: .hadolint.yaml
 
       - name: actionlint (workflows)
-        run: |
-          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
-            | tar -xz actionlint
-          ./actionlint -color
+        uses: reviewdog/action-actionlint@144cce1f5f4aad4f36bfba866f46565ac2c93546 # v1.9.0
+        with:
+          reporter: local
+          filter_mode: nofilter
+          fail_on_error: true
 
   smoke:
     # Build the image from source (pinned electrs release) and boot it the way
@@ -56,12 +53,29 @@ jobs:
     # backend, so the boot test uses `electrs --version`: enough to prove the
     # binary runs as the dropped user and that /data ends up correctly owned.
     runs-on: ubuntu-latest
-    env:
-      # Pinned electrs release built in CI. Bump alongside the real release in
-      # build-docker.yml's workflow_dispatch input.
-      ELECTRS_VERSION: v0.11.1
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Resolve electrs version to build
+        id: electrs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Fallback for the very first build, before this repo has any release.
+          FALLBACK_VERSION: v0.11.1
+        run: |
+          # Build the last version THIS repo released — i.e. the latest
+          # known-good electrs tag. release-check.yml keeps that in sync with
+          # upstream daily, so the smoke auto-tracks new releases without a
+          # manual bump, and never goes red on a brand-new upstream tag that may
+          # not compile yet (only already-released versions are ever built).
+          tag=$(curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+            | jq -r '.tag_name // empty')
+          if [ -z "$tag" ]; then tag="$FALLBACK_VERSION"; fi
+          echo "Building electrs $tag"
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
@@ -74,7 +88,7 @@ jobs:
           load: true
           push: false
           build-args: |
-            ELECTRS_VERSION=${{ env.ELECTRS_VERSION }}
+            ELECTRS_VERSION=${{ steps.electrs.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: electrs:ci
