@@ -4,5 +4,10 @@
 # versions would break on the next upstream point release without adding real
 # supply-chain value. Checksums/signatures cover the security-critical payload
 # (Bitcoin Core binaries / the electrs source tag) instead.
+#
+# DL3059 (consolidate consecutive RUN instructions) is ignored too: clone,
+# tag-signature verification, and the cargo build are kept as separate, legible
+# layers on purpose — merging them adds nothing and only obscures the build.
 ignored:
   - DL3008
+  - DL3059

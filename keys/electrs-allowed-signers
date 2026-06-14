@@ -1,0 +1,12 @@
+# OpenSSH allowed-signers file for verifying electrs release-tag signatures.
+#
+# Roman Zeyde switched tag signing from GPG to SSH as of electrs v0.11, so the
+# build verifies tags against this pinned SSH signing key instead of the old
+# GPG key (which still documents v0.10.x in upstream's doc/upgrading.md).
+#
+# Key fingerprint: SHA256:GifMn7F2swVKyn6MewbQHrYCs4i/bPK7gnwxhuPz/YA
+# Provenance: the key that signs the upstream release tags (e.g. v0.11.1).
+# When bumping, confirm this fingerprint against GitHub's "Verified" badge on
+# the tag / the romanz signing-keys API before changing it.
+me@romanzey.de ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAZVq/3fgkildjN/MqEnhrP5550sDpFzGxMwevr5q/9w
+roman.zeyde@gmail.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAZVq/3fgkildjN/MqEnhrP5550sDpFzGxMwevr5q/9w
