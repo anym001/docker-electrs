@@ -1,7 +1,8 @@
 # Electrs Docker Images
 
-[![Build](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml/badge.svg)](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/anym001/docker-electrs/build-docker.yml?label=Build)](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/anym001/docker-electrs?label=Release)](https://github.com/anym001/docker-electrs/releases)
 [![GHCR](https://img.shields.io/badge/GHCR-docker--electrs-2496ED?logo=docker&logoColor=white)](https://github.com/anym001/docker-electrs/pkgs/container/docker-electrs)
 
 This repository provides automated Docker images for Electrs.
