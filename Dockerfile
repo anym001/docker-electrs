@@ -16,18 +16,24 @@ RUN apt-get update \
         libssl-dev \
         librocksdb-dev \
         git \
-        gnupg \
+        openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
 
+# Verify the release tag's SSH signature against Roman Zeyde's pinned signing
+# key. electrs switched tag signing from GPG to SSH as of v0.11, so we verify
+# via OpenSSH allowed-signers (ssh-keygen, from openssh-client) instead of a
+# keyserver GPG fetch. The key is vendored in keys/electrs-allowed-signers
+# (SHA256:GifMn7F2swVKyn6MewbQHrYCs4i/bPK7gnwxhuPz/YA) — review it on bump.
+COPY keys/electrs-allowed-signers /etc/electrs-allowed-signers
+
 RUN git clone --depth 1 --branch "${ELECTRS_VERSION}" \
     https://github.com/romanz/electrs.git .
 
-# Verify the release tag using Roman Zeyde's GPG key (fingerprint stable since 2018)
-RUN gpg --keyserver hkps://keyserver.ubuntu.com \
-        --recv-keys 15C8C3574AE4F1E25F3F35C587CAE5FA46917CBB \
-    && git verify-tag "${ELECTRS_VERSION}"
+RUN git -c gpg.format=ssh \
+        -c gpg.ssh.allowedSignersFile=/etc/electrs-allowed-signers \
+        verify-tag "${ELECTRS_VERSION}"
 
 RUN cargo build --release
 

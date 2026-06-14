@@ -1,0 +1,13 @@
+# Hadolint configuration for the image build CI (.github/workflows/ci.yml).
+# DL3008 (pin apt package versions) is intentionally ignored: the base images
+# track rolling Debian tags (debian:stable-slim / rust:slim), so pinned apt
+# versions would break on the next upstream point release without adding real
+# supply-chain value. Checksums/signatures cover the security-critical payload
+# (Bitcoin Core binaries / the electrs source tag) instead.
+#
+# DL3059 (consolidate consecutive RUN instructions) is ignored too: clone,
+# tag-signature verification, and the cargo build are kept as separate, legible
+# layers on purpose — merging them adds nothing and only obscures the build.
+ignored:
+  - DL3008
+  - DL3059

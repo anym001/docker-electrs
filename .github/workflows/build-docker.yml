@@ -12,7 +12,13 @@ on:
         default: "true"
 
 jobs:
+  # Gate the release on the same checks PRs run (lint + wrapper smoke). A red
+  # ci means no image is published.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   build:
+    needs: ci
     runs-on: ubuntu-latest
 
     permissions:
@@ -46,9 +52,11 @@ jobs:
           fi
           SHORT_VERSION="${VERSION#v}"
 
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "LATEST=$LATEST" >> $GITHUB_OUTPUT
-          echo "SHORT_VERSION=$SHORT_VERSION" >> $GITHUB_OUTPUT
+          {
+            echo "VERSION=$VERSION"
+            echo "LATEST=$LATEST"
+            echo "SHORT_VERSION=$SHORT_VERSION"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build & push Docker images
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
