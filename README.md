@@ -2,7 +2,7 @@
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/anym001/docker-electrs/ci.yml?label=Tests)](https://github.com/anym001/docker-electrs/actions/workflows/ci.yml)
 [![Build](https://img.shields.io/github/actions/workflow/status/anym001/docker-electrs/build-docker.yml?label=Build)](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/anym001/docker-electrs/blob/HEAD/LICENSE)
 [![Release](https://img.shields.io/github/v/release/anym001/docker-electrs?label=Release)](https://github.com/anym001/docker-electrs/releases)
 [![GHCR](https://img.shields.io/badge/GHCR-docker--electrs-2496ED?logo=docker&logoColor=white)](https://github.com/anym001/docker-electrs/pkgs/container/docker-electrs)
 
@@ -161,7 +161,7 @@ PRs are welcome, especially improvements to:
 ## License
 
 The contents of this repository (Dockerfile, scripts, and workflows) are
-licensed under the [MIT License](LICENSE).
+licensed under the [MIT License](https://github.com/anym001/docker-electrs/blob/HEAD/LICENSE).
 
 This project only packages electrs into Docker images; the upstream source
 code is compiled at build time, not modified or redistributed in this
