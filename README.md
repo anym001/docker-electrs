@@ -2,9 +2,10 @@
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/anym001/docker-electrs/ci.yml?label=Tests)](https://github.com/anym001/docker-electrs/actions/workflows/ci.yml)
 [![Build](https://img.shields.io/github/actions/workflow/status/anym001/docker-electrs/build-docker.yml?label=Build)](https://github.com/anym001/docker-electrs/actions/workflows/build-docker.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/anym001/docker-electrs/blob/HEAD/LICENSE)
 [![Release](https://img.shields.io/github/v/release/anym001/docker-electrs?label=Release)](https://github.com/anym001/docker-electrs/releases)
 [![GHCR](https://img.shields.io/badge/GHCR-docker--electrs-2496ED?logo=docker&logoColor=white)](https://github.com/anym001/docker-electrs/pkgs/container/docker-electrs)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-docker--electrs-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/anym001/docker-electrs)
 
 This repository provides automated Docker images for Electrs.
 Images are built for all official releases starting from `v0.11.0` and pushed to GitHub Container Registry (GHCR).
@@ -46,6 +47,13 @@ Electrs provides a fast, private, and fully indexed Electrum-compatible API back
 - A configuration file `/data/electrs.toml` must be provided by the user
 
 ## Usage
+
+Images are published to **GHCR** and **Docker Hub** — use whichever you prefer:
+
+```
+docker pull ghcr.io/anym001/docker-electrs:<version>
+docker pull anym001/docker-electrs:<version>      # Docker Hub
+```
 
 Minimal example:
 
@@ -161,7 +169,7 @@ PRs are welcome, especially improvements to:
 ## License
 
 The contents of this repository (Dockerfile, scripts, and workflows) are
-licensed under the [MIT License](LICENSE).
+licensed under the [MIT License](https://github.com/anym001/docker-electrs/blob/HEAD/LICENSE).
 
 This project only packages electrs into Docker images; the upstream source
 code is compiled at build time, not modified or redistributed in this
