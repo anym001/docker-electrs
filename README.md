@@ -48,6 +48,13 @@ Electrs provides a fast, private, and fully indexed Electrum-compatible API back
 
 ## Usage
 
+Images are published to **GHCR** and **Docker Hub** — use whichever you prefer:
+
+```
+docker pull ghcr.io/anym001/docker-electrs:<version>
+docker pull anym001/docker-electrs:<version>      # Docker Hub
+```
+
 Minimal example:
 
 ```
