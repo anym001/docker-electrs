@@ -12,13 +12,38 @@ jobs:
 
     steps:
       - name: Check for new release and trigger build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+          # GitHub occasionally hands back a transient non-JSON body (rate
+          # limit / abuse-detection page) even on authenticated calls, which
+          # makes a bare `curl | jq` fail with an opaque parse error.
+          # fetch_json() retries a few times, validates the body is real
+          # JSON before use, and logs the HTTP status + a snippet of the bad
+          # body so a future break is diagnosable instead of a bare crash.
+          fetch_json() {
+            local url="$1"; shift
+            local attempt response http_code body
+            for attempt in 1 2 3; do
+              response="$(curl -sS -w '\n%{http_code}' "$@" \
+                -H "Accept: application/vnd.github+json" \
+                "$url" 2>/dev/null || true)"
+              http_code="${response##*$'\n'}"
+              body="${response%$'\n'*}"
+              if [ "$http_code" = "200" ] && jq empty >/dev/null 2>&1 <<<"$body"; then
+                printf '%s' "$body"
+                return 0
+              fi
+              echo "::warning::Attempt $attempt/3 failed for $url (HTTP ${http_code:-none}): $(head -c 200 <<<"$body")" >&2
+              sleep $((attempt * 2))
+            done
+            return 1
+          }
 
-          OFFICIAL_VERSION=$(curl -s \
-            -H "$AUTH_HEADER" \
-            "https://api.github.com/repos/romanz/electrs/releases/latest" \
-            | jq -r 'if .tag_name then .tag_name | ltrimstr("v") else empty end')
+          OFFICIAL_JSON=$(fetch_json "https://api.github.com/repos/romanz/electrs/releases/latest" \
+            -H "Authorization: Bearer $GH_TOKEN") \
+            || { echo "Failed to fetch latest official release."; exit 1; }
+          OFFICIAL_VERSION=$(jq -r 'if .tag_name then .tag_name | ltrimstr("v") else empty end' <<<"$OFFICIAL_JSON")
 
           if [ -z "$OFFICIAL_VERSION" ]; then
             echo "Failed to fetch latest official release."
@@ -30,10 +55,12 @@ jobs:
             exit 1
           fi
 
-          CURRENT_VERSION=$(curl -s \
-            -H "$AUTH_HEADER" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
-            | jq -r 'if .tag_name then .tag_name | ltrimstr("v") else empty end')
+          # A repo without any release yet 404s here; treat that (and a
+          # persistent fetch failure) as "no current version" so the build
+          # still gets triggered — same behaviour as before.
+          CURRENT_JSON=$(fetch_json "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+            -H "Authorization: Bearer $GH_TOKEN") || CURRENT_JSON='{}'
+          CURRENT_VERSION=$(jq -r 'if .tag_name then .tag_name | ltrimstr("v") else empty end' <<<"$CURRENT_JSON")
 
           if [ "$OFFICIAL_VERSION" = "$CURRENT_VERSION" ]; then
             echo "Already up to date at v$OFFICIAL_VERSION."
@@ -46,6 +73,6 @@ jobs:
             '{"ref":"main","inputs":{"VERSION":$version,"LATEST":"true"}}')
           curl -sS --fail-with-body -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-docker.yml/dispatches" \
             -d "$PAYLOAD"
