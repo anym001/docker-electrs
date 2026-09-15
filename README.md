@@ -24,6 +24,7 @@ Electrs provides a fast, private, and fully indexed Electrum-compatible API back
 - [Volume Mounts](#volume-mounts)
 - [Ports](#ports)
 - [Security](#security)
+- [Troubleshooting](#troubleshooting)
 - [Automated Build System](#automated-build-system)
 - [Contributing](#contributing)
 
@@ -31,7 +32,7 @@ Electrs provides a fast, private, and fully indexed Electrum-compatible API back
 
 - Fast Electrum server backed by RocksDB
 - Multi-stage Rust build resulting in a small final image
-- Cookie authentication with Bitcoin Core
+- Cookie authentication with Bitcoin Core (RPC); block data via Bitcoin Core's REST interface as of `0.12.0`
 - Dynamic user permissions via `PUID`, `PGID`, and `UMASK` (Unraid compatible)
 - Simple configuration using `electrs.toml` in the data directory
 - Optional Prometheus metrics endpoint
@@ -42,9 +43,36 @@ Electrs provides a fast, private, and fully indexed Electrum-compatible API back
 ## Requirements
 
 - A running Bitcoin Core (bitcoind) container
-- RPC port (8332) and P2P port (8333) must be reachable by Electrs
 - A `.cookie` authentication file must be mounted into `/home/electrs/.bitcoin`
 - A configuration file `/data/electrs.toml` must be provided by the user
+
+Depending on the electrs version:
+
+| | `0.12.0` and newer | `0.11.x` |
+| :-- | :-- | :-- |
+| Bitcoin Core | **31 or newer** | 0.21 or newer |
+| Block source | REST interface on the RPC port | P2P |
+| Required in `bitcoin.conf` | `server=1` **and `rest=1`** | `server=1` |
+| Ports reachable by electrs | RPC `8332` | RPC `8332` and P2P `8333` |
+| `daemon_p2p_addr` in `electrs.toml` | removed — must not be set | required |
+
+Starting with `0.12.0` electrs reads blocks through Bitcoin Core's REST
+interface (`bindex`) instead of the P2P port. Without `rest=1` the container
+exits during startup — see [Troubleshooting](#troubleshooting).
+
+The REST interface is unauthenticated, so it must only be exposed to the
+container network, never to the internet. In a Docker setup bitcoind
+typically needs:
+
+```
+server=1
+rest=1
+rpcbind=0.0.0.0
+rpcallowip=172.16.0.0/12   # your Docker subnet only
+```
+
+The `0.12.0` index format is incompatible with earlier versions: the index is
+rebuilt from scratch on first start after the upgrade.
 
 ## Usage
 
@@ -100,7 +128,17 @@ Inside the container this becomes:
 /data/electrs.toml
 ```
 
-Example:
+Example for `0.12.0` and newer:
+
+```
+network = "bitcoin"
+daemon_rpc_addr = "bitcoind:8332"
+daemon_auth = "/home/electrs/.bitcoin/.cookie"
+db_dir = "/data/db"
+electrum_rpc_addr = "0.0.0.0:50001"
+```
+
+Example for `0.11.x`:
 
 ```
 network = "bitcoin"
@@ -110,6 +148,9 @@ daemon_auth = "/home/electrs/.bitcoin/.cookie"
 db_dir = "/data/db"
 electrum_rpc_addr = "0.0.0.0:50001"
 ```
+
+`daemon_p2p_addr` was removed from the `0.12.0` configuration options and
+must be deleted from an existing `electrs.toml` before upgrading.
 
 ## Environment Variables
 
@@ -141,6 +182,43 @@ This image is designed with safety in mind:
 - Uses minimal base image (`debian:stable-slim`)
 - No unnecessary packages installed
 - Ensures safe access to the mounted volume using `PUID`, `PGID`, and `UMASK`
+
+## Troubleshooting
+
+### `blockhashbyheight` fails with HTTP 404
+
+```
+ERROR bindex::client] GET http://<bitcoind>:8332/rest/blockhashbyheight/0.bin failed: StatusCode(404)
+Error: electrs failed
+Caused by:
+    0: failed to open index
+    1: client failed: request failed: http status: 404
+```
+
+Bitcoin Core answers on the RPC port but its REST interface is disabled.
+Add `rest=1` to `bitcoin.conf` and restart bitcoind. Verify from the host:
+
+```
+curl -s -o /dev/null -w '%{http_code}\n' \
+  http://<bitcoind>:8332/rest/blockhashbyheight/0.bin
+```
+
+`200` means REST is available, `404` means it is still off.
+
+### `Connection refused` or timeouts on the REST/RPC port
+
+bitcoind only listens on loopback by default. Set `rpcbind=0.0.0.0` and
+restrict access with `rpcallowip=<docker subnet>`.
+
+### Index is rebuilt after upgrading to `0.12.0`
+
+Expected: `0.12.0` switched to the `bindex` index format. The old
+`/data/db` content is unusable and the initial sync runs once more.
+
+### `useradd warning: electrs's uid 99 outside of the UID_MIN ... range`
+
+Harmless. `PUID=99` / `PGID=100` is the Unraid convention; the warning does
+not affect the container.
 
 ## Automated Build System
 
