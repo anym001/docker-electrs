@@ -210,10 +210,22 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 bitcoind only listens on loopback by default. Set `rpcbind=0.0.0.0` and
 restrict access with `rpcallowip=<docker subnet>`.
 
-### Index is rebuilt after upgrading to `0.12.0`
+### electrs asks for a reindex after upgrading to `0.12.0`
 
-Expected: `0.12.0` switched to the `bindex` index format. The old
-`/data/db` content is unusable and the initial sync runs once more.
+`0.12.0` switched to the `bindex` index format, so an index written by
+`0.11.x` is unusable. The `auto_reindex` option is still accepted but no
+longer acts on it — delete the old index manually:
+
+```
+docker stop electrs
+rm -rf /your/data/dir/db/bitcoin    # /data/db/<network> inside the container
+docker start electrs
+```
+
+Keep at least 120 GB free for a mainnet rebuild. electrs does not answer
+Electrum requests until the initial sync has finished (several hours,
+depending on hardware). `electrs.toml` itself lives in `/data` and stays
+untouched.
 
 ### `useradd warning: electrs's uid 99 outside of the UID_MIN ... range`
 
