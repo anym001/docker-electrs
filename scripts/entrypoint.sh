@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# electrs logs to stderr. Send this script's messages there too, so log viewers
+# that read stdout and stderr separately (e.g. Unraid's) keep them in order.
+# The original stdout is kept on fd 3 and restored for electrs itself.
+exec 3>&1 1>&2
+
 echo "-----------------------------------------------"
 echo "Initializing electrs container environment..."
 echo "-----------------------------------------------"
@@ -65,4 +70,5 @@ echo "Starting electrs as UID:$PUID GID:$PGID"
 echo "Using DATA_DIR: /data"
 echo "Command: $*"
 echo "-----------------------------------------------"
+exec 1>&3 3>&-
 exec gosu "$PUID:$PGID" electrs "$@"
